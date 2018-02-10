@@ -8,7 +8,7 @@ const (
 
 type ControlData struct {
 	Key string `json:"key"`
-	Value int `json:"value"`
+	Value uint8 `json:"value"`
 }
 
 type ServerStatus struct {
@@ -16,7 +16,7 @@ type ServerStatus struct {
 }
 
 func main() {
-	ch := make(chan ControlData)
+	ch := make(chan ControlData, 5)
 	go udpServer(ch)
 	leds(ch)
 }
