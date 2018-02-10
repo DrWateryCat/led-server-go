@@ -1,7 +1,6 @@
 package main
 
 import (
-	"sync"
 	"encoding/json"
 	"os"
 	"fmt"
@@ -15,7 +14,7 @@ func checkError(err error) {
 	}
 }
 
-func udpServer(ch chan<- ControlData, hasData chan<- bool) {
+func udpServer(ch chan<- ControlData) {
 	addr, err := net.ResolveUDPAddr("udp", ":" + CONN_PORT)
 	checkError(err)
 
@@ -26,10 +25,6 @@ func udpServer(ch chan<- ControlData, hasData chan<- bool) {
 	defer conn.Close()
 
 	buf := make([]byte, 1024)
-	recieved := false
-	var lock = &sync.Mutex{}
-
-	go func ()  {
 		for  {
 			n, addr, err := conn.ReadFromUDP(buf)
 			if err != nil {
@@ -46,21 +41,5 @@ func udpServer(ch chan<- ControlData, hasData chan<- bool) {
 			fmt.Println("Recieved ", inObj, " from ", addr)
 	
 			ch <- inObj
-			lock.Lock()
-			recieved = true
-			lock.Unlock()
-		}	
-	}()
-
-	for {
-		lock.Lock()
-		if recieved {
-			hasData <- true
-			recieved = false
-		} else {
-			hasData <- false
 		}
-		lock.Unlock()
-
-	}
 }

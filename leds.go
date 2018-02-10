@@ -69,7 +69,7 @@ func rainbowCycle() {
 	}
 }
 
-func leds(ch <-chan ControlData, hasData <-chan bool) {
+func leds(ch <-chan ControlData) {
 	defer ws2811.Fini()
 	err := ws2811.Init(LED_PIN, LED_COUNT, LED_BRIGHTNESS)
 
@@ -88,7 +88,7 @@ func leds(ch <-chan ControlData, hasData <-chan bool) {
 	for {
 		select {
 		case input := <-ch:
-			if input.Key != nil {
+			if input.Key != "" {
 				switch input.Key {
 				case "red":
 					red = input.Value
@@ -100,7 +100,7 @@ func leds(ch <-chan ControlData, hasData <-chan bool) {
 					anim = input.Value
 				}
 			}
-		case t := <-ticker.C:
+		case <-ticker.C:
 			switch anim {
 			case 0:
 				//Off
