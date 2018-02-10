@@ -69,7 +69,7 @@ func rainbowCycle() {
 	}
 }
 
-func leds(ch <-chan ControlData) {
+func leds(ch <-chan ControlData, hasData <-chan bool) {
 	defer ws2811.Fini()
 	err := ws2811.Init(LED_PIN, LED_COUNT, LED_BRIGHTNESS)
 
@@ -83,39 +83,38 @@ func leds(ch <-chan ControlData) {
 
 	var anim uint8
 
+	ticker := time.NewTicker(20 * time.Millisecond)
+
 	for {
-		var input ControlData
 		select {
-			case input <- ch
-			case <-time.After(20 * time.Millisecond)
-		}
-
-		if input.Key != nil {
-			switch input.Key {
-			case "red":
-				red = input.Value
-			case "green":
-				green = input.Value
-			case "blue":
-				blue = input.Value
-			case "animation":
-				anim = input.Value
+		case input := <-ch:
+			if input.Key != nil {
+				switch input.Key {
+				case "red":
+					red = input.Value
+				case "green":
+					green = input.Value
+				case "blue":
+					blue = input.Value
+				case "animation":
+					anim = input.Value
+				}
 			}
-		}
-
-		switch anim {
-		case 0:
-			//Off
-			colorWipe(color(0, 0, 0))
-		case 1:
-			//Solid Color
-			colorWipe(color(red, green, blue))
-		case 2:
-			//Rainbow
-			rainbow()
-		case 3:
-			//Rainbow cycle
-			rainbowCycle()
+		case t := <-ticker.C:
+			switch anim {
+			case 0:
+				//Off
+				colorWipe(color(0, 0, 0))
+			case 1:
+				//Solid Color
+				colorWipe(color(red, green, blue))
+			case 2:
+				//Rainbow
+				rainbow()
+			case 3:
+				//Rainbow cycle
+				rainbowCycle()
+			}
 		}
 	}
 }

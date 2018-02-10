@@ -17,6 +17,7 @@ type ServerStatus struct {
 
 func main() {
 	ch := make(chan ControlData, 5)
-	go udpServer(ch)
-	leds(ch)
+	hasData := make(chan bool)
+	go udpServer(ch, hasData)
+	leds(ch, hasData)
 }
