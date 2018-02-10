@@ -18,7 +18,7 @@ const (
 )
 
 func color(red uint8, green uint8, blue uint8) uint32 {
-	u := []uint8{red, green, blue}
+	u := []uint8{red, green, blue, 0}
 	return binary.LittleEndian.Uint32(u)
 }
 
@@ -52,7 +52,7 @@ func wheel(pos byte) uint32 {
 func rainbow() {
 	for j := 0; j < 256; j++ {
 		for i := 0; i < LED_COUNT; i++ {
-			ws2811.SetLed(i, wheel((i + j) & 255))
+			ws2811.SetLed(i, wheel(uint8(i + j) & 255))
 		}
 		ws2811.Render()
 		time.Sleep(20 * time.Millisecond)
@@ -62,7 +62,7 @@ func rainbow() {
 func rainbowCycle() {
 	for j := 0; j < 256; j++ {
 		for i := 0; i < LED_COUNT; i++ {
-			ws2811.SetLed(i, wheel(((i * 256 / LED_COUNT) + j) & 255))
+			ws2811.SetLed(i, wheel(uint8((i * 256 / LED_COUNT) + j) & 255))
 		}
 		ws2811.Render()
 		time.Sleep(20 * time.Millisecond)
@@ -84,17 +84,23 @@ func leds(ch <-chan ControlData) {
 	var anim uint8
 
 	for {
-		input := <-ch
+		var input ControlData
+		select {
+			case input <- ch
+			case <-time.After(20 * time.Millisecond)
+		}
 
-		switch input.Key {
-		case "red":
-			red = input.Value
-		case "green":
-			green = input.Value
-		case "blue":
-			blue = input.Value
-		case "animation":
-			anim = input.Value
+		if input.Key != nil {
+			switch input.Key {
+			case "red":
+				red = input.Value
+			case "green":
+				green = input.Value
+			case "blue":
+				blue = input.Value
+			case "animation":
+				anim = input.Value
+			}
 		}
 
 		switch anim {
